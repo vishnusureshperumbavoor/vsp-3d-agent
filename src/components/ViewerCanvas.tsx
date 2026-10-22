@@ -53,6 +53,7 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
     const primaryActionRef = useRef<THREE.AnimationAction | null>(null)
     const clipsRef = useRef<THREE.AnimationClip[]>([])
     const dirLightRef = useRef<THREE.DirectionalLight | null>(null)
+    const gridRef = useRef<THREE.GridHelper | null>(null)
 
     const [animState, setAnimState] = useState<AnimationState>({
       clips: [],
@@ -262,7 +263,7 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
       fillLight.position.set(-6, 6, -6)
       scene.add(fillLight)
 
-      // Subtle shadow-catching ground (receives soft shadows without lines)
+      // Subtle shadow-catching ground (receives soft shadows)
       const shadowPlaneGeo = new THREE.PlaneGeometry(100, 100)
       const shadowPlaneMat = new THREE.ShadowMaterial({ opacity: 0.35 })
       const shadowPlane = new THREE.Mesh(shadowPlaneGeo, shadowPlaneMat)
@@ -270,6 +271,12 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
       shadowPlane.position.y = -0.001
       shadowPlane.receiveShadow = true
       scene.add(shadowPlane)
+
+      // Horizontal ground plane grid lines (XY/XZ ground grid with blue center lines)
+      const grid = new THREE.GridHelper(10, 20, 0x3b82f6, 0x334155)
+      grid.position.y = 0
+      scene.add(grid)
+      gridRef.current = grid
 
       // Animation Loop
       const clock = new THREE.Clock()
@@ -509,6 +516,16 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
             const maxDim = Math.max(size.x, size.y, size.z) || 2
             sceneSpanRef.current = maxDim
 
+            // Resize horizontal ground grid to fit model
+            if (gridRef.current) {
+              scene.remove(gridRef.current)
+              const gridSize = Math.max(10, Math.ceil(maxDim * 2.5))
+              const newGrid = new THREE.GridHelper(gridSize, 20, 0x3b82f6, 0x334155)
+              newGrid.position.y = 0
+              scene.add(newGrid)
+              gridRef.current = newGrid
+            }
+
             if (cameraRef.current && controlsRef.current) {
               const camera = cameraRef.current
               const controls = controlsRef.current
@@ -602,6 +619,17 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
 
             const maxSpan = Math.max(overallSize.x * 0.7, overallSize.y, overallSize.z)
             sceneSpanRef.current = maxSpan
+
+            // Resize horizontal ground grid to fit all models lineup
+            if (gridRef.current) {
+              scene.remove(gridRef.current)
+              const gridSize = Math.max(Math.ceil(overallSize.x * 1.4), 24)
+              const divisions = Math.max(20, Math.round(gridSize / 1.5))
+              const newGrid = new THREE.GridHelper(gridSize, divisions, 0x3b82f6, 0x334155)
+              newGrid.position.y = 0
+              scene.add(newGrid)
+              gridRef.current = newGrid
+            }
 
             if (cameraRef.current && controlsRef.current) {
               const camera = cameraRef.current
