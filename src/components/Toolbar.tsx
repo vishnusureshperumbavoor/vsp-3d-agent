@@ -31,6 +31,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   isViewAll,
   totalModelsCount,
 }) => {
+  const currentSpeed = Math.abs(settings.autoRotateSpeed)
+
   return (
     <header className="h-14 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md px-4 flex items-center justify-between z-10 select-none">
       {/* Current Model Title & Views */}
@@ -88,19 +90,50 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
       {/* Tools & Actions */}
       <div className="flex items-center gap-2">
-        {/* Auto Rotate Turntable */}
-        <button
-          onClick={() => onUpdateSettings({ autoRotate: !settings.autoRotate })}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition ${
-            settings.autoRotate
-              ? 'bg-blue-600/20 text-blue-300 border-blue-500/50'
-              : 'text-slate-400 hover:text-slate-200 border-slate-800 hover:bg-slate-800'
-          }`}
-          title="Toggle Turntable Rotation"
-        >
-          <Repeat className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Rotate</span>
-        </button>
+        {/* Auto Rotate & Speed Group */}
+        <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg p-0.5 shadow-sm">
+          <button
+            onClick={() => onUpdateSettings({ autoRotate: !settings.autoRotate })}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition ${
+              settings.autoRotate
+                ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title={settings.autoRotate ? 'Pause 360 Rotation' : 'Start 360 Rotation'}
+          >
+            <Repeat className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Rotate</span>
+          </button>
+
+          {/* Speed Preset Pills */}
+          <div className="flex items-center gap-0.5 px-1 border-l border-slate-800/80 ml-1">
+            {[
+              { label: '0.5x', speed: 1.0 },
+              { label: '1x', speed: 2.5 },
+              { label: '2x', speed: 5.0 },
+              { label: '4x', speed: 9.0 },
+            ].map((item) => (
+              <button
+                key={item.label}
+                onClick={() => {
+                  const direction = settings.autoRotateSpeed < 0 ? -1 : 1
+                  onUpdateSettings({
+                    autoRotateSpeed: item.speed * direction,
+                    autoRotate: true,
+                  })
+                }}
+                className={`px-1.5 py-0.5 text-[10px] font-mono rounded transition ${
+                  settings.autoRotate && Math.abs(currentSpeed - item.speed) < 0.4
+                    ? 'bg-blue-600/40 text-blue-300 font-bold'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                }`}
+                title={`Set rotation speed to ${item.label}`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Reset Camera */}
         <button

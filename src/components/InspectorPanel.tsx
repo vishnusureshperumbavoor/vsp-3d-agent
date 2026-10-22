@@ -191,24 +191,34 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
             </div>
 
             {/* Auto Rotate Speed */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-slate-300">
-                <span>Auto-Rotate Speed</span>
-                <span className="font-mono text-slate-400">
-                  {settings.autoRotateSpeed.toFixed(1)}
+            <div className="space-y-2 bg-slate-950/60 p-3 rounded-lg border border-slate-800/80">
+              <div className="flex justify-between items-center text-slate-300">
+                <span className="font-medium">360° Rotation Speed</span>
+                <span className="font-mono text-blue-400 bg-blue-950/50 px-1.5 py-0.5 rounded border border-blue-900/50">
+                  {Math.abs(settings.autoRotateSpeed).toFixed(1)}x
                 </span>
               </div>
               <input
                 type="range"
                 min={0.5}
-                max={5.0}
+                max={12.0}
                 step={0.5}
-                value={settings.autoRotateSpeed}
-                onChange={(e) =>
-                  onUpdateSettings({ autoRotateSpeed: parseFloat(e.target.value) })
-                }
+                value={Math.abs(settings.autoRotateSpeed)}
+                onChange={(e) => {
+                  const direction = settings.autoRotateSpeed < 0 ? -1 : 1
+                  onUpdateSettings({ autoRotateSpeed: parseFloat(e.target.value) * direction })
+                }}
                 className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
               />
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[10px] text-slate-500">Direction:</span>
+                <button
+                  onClick={() => onUpdateSettings({ autoRotateSpeed: -settings.autoRotateSpeed })}
+                  className="text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-700/60 text-slate-300 hover:text-white hover:border-blue-500 transition"
+                >
+                  {settings.autoRotateSpeed >= 0 ? '↻ Clockwise' : '↺ Counter-Clockwise'}
+                </button>
+              </div>
             </div>
 
             {/* Background Style */}
