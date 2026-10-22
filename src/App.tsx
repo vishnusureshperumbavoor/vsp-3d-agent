@@ -16,6 +16,7 @@ import { Loader2 } from 'lucide-react'
 export function App() {
   const [models, setModels] = useState<ModelItem[]>([])
   const [selectedModel, setSelectedModel] = useState<ModelItem | null>(null)
+  const [isViewAll, setIsViewAll] = useState(false)
   const [isFetchingModels, setIsFetchingModels] = useState(false)
 
   // Loading state of 3D asset
@@ -39,13 +40,9 @@ export function App() {
 
   // Settings
   const [settings, setSettings] = useState<ViewerSettings>({
-    grid: true,
-    axes: true,
     autoRotate: false,
     autoRotateSpeed: 1.0,
-    environment: 'studio',
     exposure: 1.0,
-    shadows: true,
     backgroundColor: 'dark',
   })
 
@@ -63,7 +60,6 @@ export function App() {
           setSelectedModel(data[0])
         }
       } else {
-        // Fallback to static manifest if api is not present
         const fallbackRes = await fetch('/models.json')
         if (fallbackRes.ok) {
           const data: ModelItem[] = await fallbackRes.json()
@@ -99,7 +95,6 @@ export function App() {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger shortcuts if typing in input
       if (['INPUT', 'SELECT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
         return
       }
@@ -110,9 +105,6 @@ export function App() {
           if (animState.clips.length > 0) {
             viewerRef.current?.setAnimationPlay(!animState.isPlaying)
           }
-          break
-        case 'g':
-          setSettings((prev) => ({ ...prev, grid: !prev.grid }))
           break
         case 'r':
           viewerRef.current?.resetCamera()
@@ -137,8 +129,13 @@ export function App() {
       <Sidebar
         models={models}
         selectedModel={selectedModel}
+        isViewAll={isViewAll}
         onSelectModel={(m) => {
+          setIsViewAll(false)
           setSelectedModel(m)
+        }}
+        onSelectViewAll={() => {
+          setIsViewAll(true)
         }}
         onRefresh={fetchModels}
         isLoading={isFetchingModels}
@@ -152,19 +149,20 @@ export function App() {
           onUpdateSettings={updateSettings}
           onResetCamera={() => viewerRef.current?.resetCamera()}
           onSetCameraView={(view) => viewerRef.current?.setCameraView(view)}
-          onTakeScreenshot={() =>
-            viewerRef.current?.takeScreenshot(`${selectedModel?.name || 'model'}-snapshot.png`)
-          }
           showInspector={showInspector}
           onToggleInspector={() => setShowInspector(!showInspector)}
           activeModelName={selectedModel?.name}
+          isViewAll={isViewAll}
+          totalModelsCount={models.length}
         />
 
         {/* 3D Canvas Area */}
         <div className="flex-1 relative overflow-hidden">
           <ViewerCanvas
             ref={viewerRef}
-            modelUrl={selectedModel?.url || null}
+            models={models}
+            selectedModel={selectedModel}
+            isViewAll={isViewAll}
             settings={settings}
             onStatsLoaded={(st) => setStats(st)}
             onHierarchyLoaded={(tree) => setHierarchy(tree)}
@@ -175,13 +173,15 @@ export function App() {
             }}
           />
 
-          {/* Model Loading Indicator */}
+          {/* Model Loading Overlay */}
           {modelLoading && (
             <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm z-30 flex flex-col items-center justify-center gap-3 select-none">
               <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
               <div className="text-center space-y-1">
                 <p className="text-xs font-semibold text-slate-200">
-                  Loading {selectedModel?.name.replace(/_/g, ' ')}...
+                  {isViewAll
+                    ? `Loading all ${models.length} models lineup...`
+                    : `Loading ${selectedModel?.name.replace(/_/g, ' ')}...`}
                 </p>
                 <div className="w-48 h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50">
                   <div

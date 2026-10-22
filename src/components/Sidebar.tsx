@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   HardDrive,
+  Users,
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -17,6 +18,8 @@ interface SidebarProps {
   onSelectModel: (model: ModelItem) => void
   onRefresh: () => void
   isLoading: boolean
+  isViewAll: boolean
+  onSelectViewAll: () => void
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -25,6 +28,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectModel,
   onRefresh,
   isLoading,
+  isViewAll,
+  onSelectViewAll,
 }) => {
   const [collapsed, setCollapsed] = useState(false)
   const [search, setSearch] = useState('')
@@ -103,6 +108,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {/* Model List */}
           <div className="flex-1 overflow-y-auto p-2 space-y-1">
+            {/* View All Models Action Button */}
+            {models.length > 0 && (
+              <button
+                onClick={onSelectViewAll}
+                className={`w-full text-left p-2.5 rounded-lg text-xs transition flex items-center justify-between group mb-2 border ${
+                  isViewAll
+                    ? 'bg-gradient-to-r from-blue-600/30 to-indigo-600/30 border-blue-500/60 text-blue-200 shadow-md shadow-blue-500/10'
+                    : 'hover:bg-slate-800/60 text-slate-300 border-slate-800/80 bg-slate-950/40'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                  <Users
+                    className={`w-4 h-4 shrink-0 transition ${
+                      isViewAll ? 'text-blue-400' : 'text-slate-400 group-hover:text-slate-200'
+                    }`}
+                  />
+                  <span className="font-semibold tracking-wide">
+                    View All Models
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-950/60 text-blue-300 border border-blue-800/50 font-medium">
+                    {models.length} Lineup
+                  </span>
+                  {isViewAll && <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />}
+                </div>
+              </button>
+            )}
+
             {filteredModels.length === 0 ? (
               <div className="text-center py-12 px-4 text-slate-500 text-xs">
                 {search ? (
@@ -119,7 +153,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             ) : (
               filteredModels.map((model) => {
-                const isSelected = selectedModel?.filename === model.filename
+                const isSelected = !isViewAll && selectedModel?.filename === model.filename
                 return (
                   <button
                     key={model.filename}
@@ -171,6 +205,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
             title="Sync folder"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={onSelectViewAll}
+            className={`p-2 rounded-lg transition ${
+              isViewAll ? 'text-blue-400 bg-blue-600/20' : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="View all models lineup"
+          >
+            <Users className="w-4 h-4" />
           </button>
         </div>
       )}

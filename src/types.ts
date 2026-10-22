@@ -21,13 +21,9 @@ export interface ModelStats {
 }
 
 export interface ViewerSettings {
-  grid: boolean
-  axes: boolean
   autoRotate: boolean
   autoRotateSpeed: number
-  environment: 'studio' | 'neutral' | 'sunset' | 'dark' | 'none'
   exposure: number
-  shadows: boolean
   backgroundColor: string
 }
 
