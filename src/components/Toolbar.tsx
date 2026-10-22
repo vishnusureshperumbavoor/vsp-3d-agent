@@ -7,6 +7,7 @@ import {
   Sparkles,
   Users,
   Box,
+  ArrowUpDown,
 } from 'lucide-react'
 
 interface ToolbarProps {
@@ -91,6 +92,20 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
       {/* Tools & Actions */}
       <div className="flex items-center gap-2">
+        {/* Equal Height Toggle */}
+        <button
+          onClick={() => onUpdateSettings({ uniformHeight: !settings.uniformHeight })}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition ${
+            settings.uniformHeight
+              ? 'bg-blue-600/20 text-blue-300 border-blue-500/50'
+              : 'text-slate-400 hover:text-slate-200 border-slate-800 hover:bg-slate-800'
+          }`}
+          title="Make all models stand at the same uniform height (1.8m)"
+        >
+          <ArrowUpDown className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Equal Height</span>
+        </button>
+
         {/* Auto Rotate & Speed Group */}
         <div className="flex items-center bg-slate-950/70 border border-slate-800 rounded-lg p-0.5 shadow-sm">
           <button

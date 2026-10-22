@@ -10,6 +10,8 @@ import {
   ChevronRight,
   HardDrive,
   Users,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -20,6 +22,8 @@ interface SidebarProps {
   isLoading: boolean
   isViewAll: boolean
   onSelectViewAll: () => void
+  disabledModelFilenames: Set<string>
+  onToggleModelVisibility: (filename: string) => void
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -30,6 +34,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isLoading,
   isViewAll,
   onSelectViewAll,
+  disabledModelFilenames,
+  onToggleModelVisibility,
 }) => {
   const [collapsed, setCollapsed] = useState(false)
   const [search, setSearch] = useState('')
@@ -37,6 +43,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const filteredModels = models.filter((m) =>
     m.name.toLowerCase().includes(search.toLowerCase())
   )
+
+  const activeCount = models.filter((m) => !disabledModelFilenames.has(m.filename)).length
 
   const totalSizeMB = (
     models.reduce((sum, m) => sum + m.sizeBytes, 0) / (1024 * 1024)
@@ -130,7 +138,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-950/60 text-blue-300 border border-blue-800/50 font-medium">
-                    {models.length} Circle
+                    {activeCount} / {models.length} Active
                   </span>
                   {isViewAll && <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />}
                 </div>
@@ -154,11 +162,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             ) : (
               filteredModels.map((model) => {
                 const isSelected = !isViewAll && selectedModel?.filename === model.filename
+                const isIncluded = !disabledModelFilenames.has(model.filename)
+
                 return (
-                  <button
+                  <div
                     key={model.filename}
                     onClick={() => onSelectModel(model)}
-                    className={`w-full text-left p-2.5 rounded-lg text-xs transition flex items-center justify-between group ${
+                    className={`w-full text-left p-2.5 rounded-lg text-xs transition flex items-center justify-between group cursor-pointer ${
                       isSelected
                         ? 'bg-blue-600/20 border border-blue-500/40 text-blue-200 shadow-sm shadow-blue-500/10'
                         : 'hover:bg-slate-800/60 text-slate-300 border border-transparent'
@@ -172,20 +182,49 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             : 'text-slate-500 group-hover:text-slate-300'
                         }`}
                       />
-                      <span className="truncate font-medium capitalize">
+                      <span
+                        className={`truncate font-medium capitalize ${
+                          !isIncluded ? 'line-through text-slate-500' : ''
+                        }`}
+                      >
                         {model.name.replace(/_/g, ' ')}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50 font-mono">
                         {model.sizeFormatted}
                       </span>
+
+                      {/* Eye button to toggle in All Models circle */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onToggleModelVisibility(model.filename)
+                        }}
+                        className={`p-1 rounded transition hover:bg-slate-700/60 ${
+                          isIncluded
+                            ? 'text-blue-400 hover:text-blue-300'
+                            : 'text-slate-600 hover:text-slate-400'
+                        }`}
+                        title={
+                          isIncluded
+                            ? 'Included in All Models view (click to hide)'
+                            : 'Excluded from All Models view (click to show)'
+                        }
+                      >
+                        {isIncluded ? (
+                          <Eye className="w-3.5 h-3.5" />
+                        ) : (
+                          <EyeOff className="w-3.5 h-3.5 text-slate-500" />
+                        )}
+                      </button>
+
                       {isSelected && (
                         <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
                       )}
                     </div>
-                  </button>
+                  </div>
                 )
               })
             )}

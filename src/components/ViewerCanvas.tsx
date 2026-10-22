@@ -21,6 +21,7 @@ interface ViewerCanvasProps {
   selectedModel: ModelItem | null
   isViewAll: boolean
   settings: ViewerSettings
+  disabledModelFilenames?: Set<string>
   onStatsLoaded?: (stats: ModelStats) => void
   onHierarchyLoaded?: (tree: NodeTreeNode[]) => void
   onAnimationStateChange?: (state: AnimationState) => void
@@ -34,6 +35,7 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
       selectedModel,
       isViewAll,
       settings,
+      disabledModelFilenames,
       onStatsLoaded,
       onHierarchyLoaded,
       onAnimationStateChange,
@@ -346,7 +348,7 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
 
       // Determine which models to load
       const targetsToLoad: ModelItem[] = isViewAll
-        ? models
+        ? models.filter((m) => !disabledModelFilenames?.has(m.filename))
         : selectedModel
         ? [selectedModel]
         : []
@@ -463,6 +465,18 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
                   })
                 }
               })
+
+              // Scale to uniform height (1.8m) if enabled
+              const initialBox = new THREE.Box3().setFromObject(model)
+              const initialSize = new THREE.Vector3()
+              initialBox.getSize(initialSize)
+
+              if (settings.uniformHeight && initialSize.y > 0) {
+                const targetHeight = 1.8
+                const scaleFactor = targetHeight / initialSize.y
+                model.scale.set(scaleFactor, scaleFactor, scaleFactor)
+                model.updateMatrixWorld(true)
+              }
 
               const box = new THREE.Box3().setFromObject(model)
               const size = new THREE.Vector3()
@@ -759,7 +773,7 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
           onLoadingProgress?.(0, false)
           dracoLoader.dispose()
         })
-    }, [isViewAll, selectedModel, models])
+    }, [isViewAll, selectedModel, models, disabledModelFilenames, settings.uniformHeight])
 
     return (
       <div

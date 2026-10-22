@@ -18,6 +18,7 @@ export function App() {
   const [selectedModel, setSelectedModel] = useState<ModelItem | null>(null)
   const [isViewAll, setIsViewAll] = useState(false)
   const [isFetchingModels, setIsFetchingModels] = useState(false)
+  const [disabledModelFilenames, setDisabledModelFilenames] = useState<Set<string>>(new Set())
 
   // Loading state of 3D asset
   const [modelLoading, setModelLoading] = useState(false)
@@ -44,6 +45,7 @@ export function App() {
     autoRotateSpeed: 3.75,
     exposure: 1.0,
     backgroundColor: 'dark',
+    uniformHeight: true,
   })
 
   const viewerRef = useRef<ViewerCanvasRef>(null)
@@ -92,6 +94,18 @@ export function App() {
     fetchModels()
   }, [])
 
+  const toggleModelVisibility = (filename: string) => {
+    setDisabledModelFilenames((prev) => {
+      const next = new Set(prev)
+      if (next.has(filename)) {
+        next.delete(filename)
+      } else {
+        next.add(filename)
+      }
+      return next
+    })
+  }
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -123,6 +137,8 @@ export function App() {
     setSettings((prev) => ({ ...prev, ...partial }))
   }
 
+  const activeAllModelsCount = models.filter((m) => !disabledModelFilenames.has(m.filename)).length
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-950 text-slate-100 font-sans">
       {/* Sidebar */}
@@ -139,6 +155,8 @@ export function App() {
         }}
         onRefresh={fetchModels}
         isLoading={isFetchingModels}
+        disabledModelFilenames={disabledModelFilenames}
+        onToggleModelVisibility={toggleModelVisibility}
       />
 
       {/* Main Viewport Area */}
@@ -153,7 +171,7 @@ export function App() {
           onToggleInspector={() => setShowInspector(!showInspector)}
           activeModelName={selectedModel?.name}
           isViewAll={isViewAll}
-          totalModelsCount={models.length}
+          totalModelsCount={activeAllModelsCount}
         />
 
         {/* 3D Canvas Area */}
@@ -164,6 +182,7 @@ export function App() {
             selectedModel={selectedModel}
             isViewAll={isViewAll}
             settings={settings}
+            disabledModelFilenames={disabledModelFilenames}
             onStatsLoaded={(st) => setStats(st)}
             onHierarchyLoaded={(tree) => setHierarchy(tree)}
             onAnimationStateChange={(ast) => setAnimState(ast)}
@@ -180,7 +199,7 @@ export function App() {
               <div className="text-center space-y-1">
                 <p className="text-xs font-semibold text-slate-200">
                   {isViewAll
-                    ? `Loading all ${models.length} models lineup...`
+                    ? `Loading ${activeAllModelsCount} models circle...`
                     : `Loading ${selectedModel?.name.replace(/_/g, ' ')}...`}
                 </p>
                 <div className="w-48 h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50">

@@ -25,6 +25,7 @@ export interface ViewerSettings {
   autoRotateSpeed: number
   exposure: number
   backgroundColor: string
+  uniformHeight: boolean
 }
 
 export interface AnimationState {
