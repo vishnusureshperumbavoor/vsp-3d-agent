@@ -1,5 +1,6 @@
 import React from 'react'
 import { ViewerSettings } from '../types'
+import { AudioPlayer } from './AudioPlayer'
 import {
   RotateCcw,
   Repeat,
@@ -144,6 +145,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           <RotateCcw className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">Reset</span>
         </button>
+
+        {/* Background Music Player */}
+        <AudioPlayer />
 
         <div className="h-5 w-px bg-slate-800 mx-1" />
 
