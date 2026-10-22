@@ -28,6 +28,28 @@ interface ViewerCanvasProps {
   onLoadingProgress?: (progress: number, loading: boolean) => void
 }
 
+// Auto-detect human posture (Standing vs. Sitting/Crouching vs. Reclined)
+// and return proportionally correct target height in meters
+function computeAutoTargetHeight(size: THREE.Vector3): number {
+  if (size.y <= 0) return 1.8
+  const hToD = size.y / Math.max(size.z, 0.001)
+  const aspect = size.y / Math.max(size.x, size.z, 0.001)
+
+  // Lying down / reclined pose
+  if (aspect < 0.8) {
+    return 0.55
+  }
+
+  // Sitting / Kneeling / Crouching pose (knees / legs projecting forward in Z)
+  if (hToD < 2.1) {
+    const t = Math.max(0, Math.min(1, (hToD - 1.0) / 1.1))
+    return 1.15 + t * 0.2 // Scales naturally between 1.15m and 1.35m
+  }
+
+  // Standing / Upright pose
+  return 1.8
+}
+
 export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
   (
     {
@@ -466,13 +488,13 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
                 }
               })
 
-              // Scale to uniform height (1.8m) if enabled
+              // Auto-scale to posture-aware uniform height if enabled
               const initialBox = new THREE.Box3().setFromObject(model)
               const initialSize = new THREE.Vector3()
               initialBox.getSize(initialSize)
 
               if (settings.uniformHeight && initialSize.y > 0) {
-                const targetHeight = 1.8
+                const targetHeight = computeAutoTargetHeight(initialSize)
                 const scaleFactor = targetHeight / initialSize.y
                 model.scale.set(scaleFactor, scaleFactor, scaleFactor)
                 model.updateMatrixWorld(true)

@@ -100,7 +100,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               ? 'bg-blue-600/20 text-blue-300 border-blue-500/50'
               : 'text-slate-400 hover:text-slate-200 border-slate-800 hover:bg-slate-800'
           }`}
-          title="Make all models stand at the same uniform height (1.8m)"
+          title="Auto-detect standing vs. sitting postures (1.8m standing, 1.2m sitting)"
         >
           <ArrowUpDown className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">Equal Height</span>
