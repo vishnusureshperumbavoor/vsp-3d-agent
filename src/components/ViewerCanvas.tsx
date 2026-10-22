@@ -571,27 +571,35 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
 
             onHierarchyLoaded?.([buildHierarchy(model)])
           } else {
-            // ALL MODELS LINEUP VIEW
-            const spacing = 1.8 // comfortable spacing between characters
-            let totalWidth = 0
+            // ALL MODELS CIRCULAR FORMATION (Avengers 1 Iconic 360 Circle)
+            const count = results.length
+            // Radius of circle based on count and model sizes (~1.7m for 4 characters)
+            const circleRadius = Math.max(1.6, (count * 1.5) / (2 * Math.PI))
 
-            results.forEach((r) => {
-              totalWidth += Math.max(r.size.x, 0.8) + spacing
-            })
-            totalWidth -= spacing
+            results.forEach((r, idx) => {
+              const { scene: model, animations, center, box } = r
 
-            let currentX = -totalWidth / 2
+              // Angle for this hero in the circle
+              const angle = (idx / count) * Math.PI * 2
 
-            results.forEach((r) => {
-              const { scene: model, animations, size, center, box } = r
-              const modelWidth = Math.max(size.x, 0.8)
+              // Holder group to handle position and outward rotation
+              const holder = new THREE.Group()
 
-              // Align on X axis lineup, center on Z, ground at y = 0
-              model.position.x = currentX + modelWidth / 2 - center.x
+              // Center model locally so feet are on ground (y = 0) and centered in X/Z
+              model.position.x = -center.x
               model.position.z = -center.z
               model.position.y = -box.min.y
+              holder.add(model)
 
-              modelsRoot.add(model)
+              // Position holder on the circle perimeter
+              holder.position.x = circleRadius * Math.sin(angle)
+              holder.position.z = circleRadius * Math.cos(angle)
+              holder.position.y = 0
+
+              // Rotate holder so each character faces outwards (away from center)
+              holder.rotation.y = angle
+
+              modelsRoot.add(holder)
 
               // Animate character if it has animation
               if (animations.length > 0) {
@@ -606,25 +614,23 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
                   clipsRef.current = animations
                 }
               }
-
-              currentX += modelWidth + spacing
             })
 
-            // Frame camera to encompass all models
+            // Frame camera to encompass the full circle
             const overallBox = new THREE.Box3().setFromObject(modelsRoot)
             const overallSize = new THREE.Vector3()
             overallBox.getSize(overallSize)
             const overallCenter = new THREE.Vector3()
             overallBox.getCenter(overallCenter)
 
-            const maxSpan = Math.max(overallSize.x * 0.7, overallSize.y, overallSize.z)
+            const maxSpan = Math.max(overallSize.x, overallSize.z, overallSize.y)
             sceneSpanRef.current = maxSpan
 
-            // Resize horizontal ground grid to fit all models lineup
+            // Resize ground grid floor
             if (gridRef.current) {
               scene.remove(gridRef.current)
-              const gridSize = Math.max(Math.ceil(overallSize.x * 1.4), 24)
-              const divisions = Math.max(20, Math.round(gridSize / 1.5))
+              const gridSize = Math.max(Math.ceil(circleRadius * 5), 18)
+              const divisions = Math.max(20, Math.round(gridSize / 1.2))
               const newGrid = new THREE.GridHelper(gridSize, divisions, 0x3b82f6, 0x334155)
               newGrid.position.y = 0
               scene.add(newGrid)
@@ -639,9 +645,9 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
               controls.target.set(0, targetY, 0)
               initialControlsTarget.current.set(0, targetY, 0)
 
-              // Step back to fit the wide panorama
-              const cameraDist = Math.max(overallSize.x * 0.8, 5)
-              camera.position.set(0, targetY + cameraDist * 0.25, cameraDist)
+              // Dramatic cinematic camera distance
+              const cameraDist = circleRadius * 2.5 + 2.2
+              camera.position.set(0, targetY + 0.8, cameraDist)
               camera.near = 0.05
               camera.far = Math.max(200, cameraDist * 20)
               camera.updateProjectionMatrix()
@@ -650,15 +656,15 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
               controls.update()
             }
 
-            // Adjust directional light for wide lineup
+            // Adjust directional light for circular lineup
             if (dirLightRef.current) {
-              const d = Math.max(overallSize.x, 15)
-              dirLightRef.current.position.set(d * 0.4, d * 0.9, d * 0.6)
-              dirLightRef.current.shadow.camera.left = -d * 0.8
-              dirLightRef.current.shadow.camera.right = d * 0.8
-              dirLightRef.current.shadow.camera.top = d * 0.6
-              dirLightRef.current.shadow.camera.bottom = -d * 0.2
-              dirLightRef.current.shadow.camera.far = d * 3
+              const d = Math.max(circleRadius * 3, 10)
+              dirLightRef.current.position.set(d * 0.7, d * 1.2, d * 0.7)
+              dirLightRef.current.shadow.camera.left = -d
+              dirLightRef.current.shadow.camera.right = d
+              dirLightRef.current.shadow.camera.top = d
+              dirLightRef.current.shadow.camera.bottom = -d
+              dirLightRef.current.shadow.camera.far = d * 4
               dirLightRef.current.shadow.camera.updateProjectionMatrix()
             }
 

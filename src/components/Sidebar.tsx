@@ -130,7 +130,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-950/60 text-blue-300 border border-blue-800/50 font-medium">
-                    {models.length} Lineup
+                    {models.length} Circle
                   </span>
                   {isViewAll && <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />}
                 </div>

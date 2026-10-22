@@ -40,7 +40,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             <div className="flex items-center gap-1.5 text-blue-400">
               <Users className="w-4 h-4" />
               <span className="text-xs font-semibold text-slate-100">
-                All Models Lineup ({totalModelsCount})
+                Avengers Circle ({totalModelsCount})
               </span>
             </div>
           ) : (
