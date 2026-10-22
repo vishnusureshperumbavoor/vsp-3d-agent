@@ -39,7 +39,6 @@ export function App() {
 
   // Settings
   const [settings, setSettings] = useState<ViewerSettings>({
-    wireframe: false,
     grid: true,
     axes: true,
     autoRotate: false,
@@ -111,9 +110,6 @@ export function App() {
           if (animState.clips.length > 0) {
             viewerRef.current?.setAnimationPlay(!animState.isPlaying)
           }
-          break
-        case 'w':
-          setSettings((prev) => ({ ...prev, wireframe: !prev.wireframe }))
           break
         case 'g':
           setSettings((prev) => ({ ...prev, grid: !prev.grid }))

@@ -24,11 +24,10 @@ A standalone web application built with **React**, **Three.js**, **Vite**, and *
   - Orbit, Pan, and Zoom with damping
   - Camera presets: Front, Back, Top, Right, Isometric
   - Center and auto-fit to any model size
-  - Quick toggles: Wireframe, Ground Grid, Coordinate Axes, Auto-Rotate, Shadows
+  - Quick toggles: Ground Grid, Coordinate Axes, Auto-Rotate, Shadows
   - Snapshot download (PNG export)
 - **Keyboard Shortcuts:**
   - `Space`: Play / Pause animation
-  - `W`: Toggle Wireframe mode
   - `G`: Toggle Ground Grid
   - `R`: Reset camera view to default
   - `I`: Toggle Inspector panel

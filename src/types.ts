@@ -21,7 +21,6 @@ export interface ModelStats {
 }
 
 export interface ViewerSettings {
-  wireframe: boolean
   grid: boolean
   axes: boolean
   autoRotate: boolean

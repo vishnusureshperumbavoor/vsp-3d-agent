@@ -340,19 +340,6 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
         controlsRef.current.autoRotate = settings.autoRotate
         controlsRef.current.autoRotateSpeed = settings.autoRotateSpeed
       }
-      if (modelGroupRef.current) {
-        modelGroupRef.current.traverse((child) => {
-          if ((child as THREE.Mesh).isMesh) {
-            const mesh = child as THREE.Mesh
-            const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
-            mats.forEach((m) => {
-              if (m && 'wireframe' in m) {
-                ;(m as THREE.MeshStandardMaterial).wireframe = settings.wireframe
-              }
-            })
-          }
-        })
-      }
     }, [settings])
 
     // Load Model when modelUrl changes
@@ -428,9 +415,6 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
               mats.forEach((m) => {
                 if (m) {
                   materialsSet.add(m.uuid)
-                  if ('wireframe' in m) {
-                    ;(m as THREE.MeshStandardMaterial).wireframe = settings.wireframe
-                  }
                 }
               })
             }

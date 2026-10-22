@@ -7,7 +7,6 @@ import {
   Compass,
   Repeat,
   Sun,
-  Layers,
   Sparkles,
 } from 'lucide-react'
 
@@ -77,20 +76,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
       {/* Tools & Toggles */}
       <div className="flex items-center gap-2">
-        {/* Wireframe */}
-        <button
-          onClick={() => onUpdateSettings({ wireframe: !settings.wireframe })}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition ${
-            settings.wireframe
-              ? 'bg-blue-600/20 text-blue-300 border-blue-500/50'
-              : 'text-slate-400 hover:text-slate-200 border-slate-800 hover:bg-slate-800'
-          }`}
-          title="Toggle Wireframe mode"
-        >
-          <Layers className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Wireframe</span>
-        </button>
-
         {/* Grid */}
         <button
           onClick={() => onUpdateSettings({ grid: !settings.grid })}
