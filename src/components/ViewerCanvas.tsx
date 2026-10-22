@@ -383,6 +383,39 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
       const loader = new GLTFLoader()
       loader.setDRACOLoader(dracoLoader)
 
+      // Register KHR_materials_pbrSpecularGlossiness extension plugin
+      // Resolves models exported with legacy specular/glossiness workflow that render white
+      loader.register((parser) => ({
+        name: 'KHR_materials_pbrSpecularGlossiness',
+        getMaterialType: () => THREE.MeshStandardMaterial,
+        extendMaterialParams: async (materialIndex: number, materialParams: Record<string, any>) => {
+          const materialDef = parser.json.materials[materialIndex]
+          if (!materialDef.extensions || !materialDef.extensions.KHR_materials_pbrSpecularGlossiness) return
+          const ext = materialDef.extensions.KHR_materials_pbrSpecularGlossiness
+
+          if (ext.diffuseFactor) {
+            materialParams.color = new THREE.Color(
+              ext.diffuseFactor[0],
+              ext.diffuseFactor[1],
+              ext.diffuseFactor[2]
+            )
+            if (ext.diffuseFactor.length > 3) {
+              materialParams.opacity = ext.diffuseFactor[3]
+              if (ext.diffuseFactor[3] < 1) materialParams.transparent = true
+            }
+          }
+          if (ext.diffuseTexture) {
+            const texture = await parser.getDependency('texture', ext.diffuseTexture.index)
+            if (texture) {
+              texture.colorSpace = THREE.SRGBColorSpace
+              materialParams.map = texture
+            }
+          }
+          materialParams.roughness = 1.0 - (ext.glossinessFactor !== undefined ? ext.glossinessFactor : 0.5)
+          materialParams.metalness = 0.0
+        },
+      }))
+
       let totalTriangles = 0
       let totalVertices = 0
       let totalMeshes = 0
