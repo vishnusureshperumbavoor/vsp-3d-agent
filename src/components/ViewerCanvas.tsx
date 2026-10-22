@@ -28,22 +28,70 @@ interface ViewerCanvasProps {
   onLoadingProgress?: (progress: number, loading: boolean) => void
 }
 
-// Auto-detect human posture (Standing vs. Sitting/Crouching vs. Reclined)
-// and return proportionally correct target height in meters
-function computeAutoTargetHeight(size: THREE.Vector3): number {
-  if (size.y <= 0) return 1.8
-  const hToD = size.y / Math.max(size.z, 0.001)
-  const aspect = size.y / Math.max(size.x, size.z, 0.001)
+// Anatomically accurate auto-detection of human posture:
+// Analyzes ground contact area (feet vs. seat/pillow) and aspect ratio
+function computeAutoTargetHeight(model: THREE.Object3D, box: THREE.Box3): number {
+  const h = box.max.y - box.min.y
+  if (h <= 0) return 1.8
+
+  const w = box.max.x - box.min.x
+  const d = box.max.z - box.min.z
+  const aspect = h / Math.max(w, d, 0.001)
 
   // Lying down / reclined pose
   if (aspect < 0.8) {
     return 0.55
   }
 
-  // Sitting / Kneeling / Crouching pose (knees / legs projecting forward in Z)
-  if (hToD < 2.1) {
-    const t = Math.max(0, Math.min(1, (hToD - 1.0) / 1.1))
-    return 1.15 + t * 0.2 // Scales naturally between 1.15m and 1.35m
+  // Sample ground contact patch in bottom 8% of the model
+  let minX = Infinity, maxX = -Infinity
+  let minZ = Infinity, maxZ = -Infinity
+  let hasBotVerts = false
+
+  const botThreshold = box.min.y + h * 0.08
+  const sampleVector = new THREE.Vector3()
+
+  model.traverse((child) => {
+    if ((child as THREE.Mesh).isMesh) {
+      const mesh = child as THREE.Mesh
+      const geom = mesh.geometry
+      if (geom && geom.attributes.position) {
+        const pos = geom.attributes.position
+        const step = Math.max(1, Math.floor(pos.count / 200))
+        for (let i = 0; i < pos.count; i += step) {
+          sampleVector.set(pos.getX(i), pos.getY(i), pos.getZ(i))
+          sampleVector.applyMatrix4(mesh.matrixWorld)
+          if (sampleVector.y <= botThreshold) {
+            hasBotVerts = true
+            if (sampleVector.x < minX) minX = sampleVector.x
+            if (sampleVector.x > maxX) maxX = sampleVector.x
+            if (sampleVector.z < minZ) minZ = sampleVector.z
+            if (sampleVector.z > maxZ) maxZ = sampleVector.z
+          }
+        }
+      }
+    }
+  })
+
+  if (hasBotVerts) {
+    const contactW = maxX - minX
+    const contactD = maxZ - minZ
+    const normArea = (contactW * contactD) / (h * h)
+    const normW = contactW / h
+    const normD = contactD / h
+
+    // A sitting/crouching person rests on their thighs, seat or pillow (large contact patch)
+    // A standing person touches ground only with small feet (tiny contact patch)
+    const isSitting = normArea > 0.12 || (normW > 0.42 && normD > 0.35)
+    if (isSitting) {
+      return 1.25 // Natural sitting human height
+    }
+  } else {
+    // Fallback heuristic if no vertices found in bottom slice
+    const hToD = h / Math.max(d, 0.001)
+    if (hToD < 1.7 && aspect < 1.6) {
+      return 1.25
+    }
   }
 
   // Standing / Upright pose
@@ -494,7 +542,7 @@ export const ViewerCanvas = forwardRef<ViewerCanvasRef, ViewerCanvasProps>(
               initialBox.getSize(initialSize)
 
               if (settings.uniformHeight && initialSize.y > 0) {
-                const targetHeight = computeAutoTargetHeight(initialSize)
+                const targetHeight = computeAutoTargetHeight(model, initialBox)
                 const scaleFactor = targetHeight / initialSize.y
                 model.scale.set(scaleFactor, scaleFactor, scaleFactor)
                 model.updateMatrixWorld(true)
