@@ -40,8 +40,8 @@ export function App() {
 
   // Settings
   const [settings, setSettings] = useState<ViewerSettings>({
-    autoRotate: false,
-    autoRotateSpeed: 2.5,
+    autoRotate: true,
+    autoRotateSpeed: 3.75,
     exposure: 1.0,
     backgroundColor: 'dark',
   })

@@ -109,8 +109,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           {/* Speed Preset Pills */}
           <div className="flex items-center gap-0.5 px-1 border-l border-slate-800/80 ml-1">
             {[
-              { label: '0.5x', speed: 1.0 },
+              { label: '0.5x', speed: 1.25 },
               { label: '1x', speed: 2.5 },
+              { label: '1.5x', speed: 3.75 },
               { label: '2x', speed: 5.0 },
               { label: '4x', speed: 9.0 },
             ].map((item) => (
@@ -124,7 +125,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                   })
                 }}
                 className={`px-1.5 py-0.5 text-[10px] font-mono rounded transition ${
-                  settings.autoRotate && Math.abs(currentSpeed - item.speed) < 0.4
+                  settings.autoRotate && Math.abs(currentSpeed - item.speed) < 0.3
                     ? 'bg-blue-600/40 text-blue-300 font-bold'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                 }`}
